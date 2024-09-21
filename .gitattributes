@@ -1,0 +1,7 @@
+# Fichiers JavaScript
+*.js text
+
+# Fichiers Bootstrap (CSS et JS)
+*.css text
+*.min.css text
+*.min.js text
