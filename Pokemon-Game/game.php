@@ -208,7 +208,7 @@ function updateProfilStats($result, $pokemonJoueurName) {
         }
 
         document.getElementById("btnQuitter").onclick = () => {
-            window.location.href = 'index.php'; // Rediriger vers la page d'accueil ou une autre page
+            window.location.href = 'index.html'; // Rediriger vers la page d'accueil ou une autre page
         };
 
         document.getElementById("btnRecommencer").onclick = () => {
