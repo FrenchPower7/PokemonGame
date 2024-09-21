@@ -58,7 +58,7 @@ $ratioPokemon = $nombreParties > 0 ? ($nombreFoisPokemon / $nombreParties) * 100
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'header.html'; ?>
     <div class="container mt-5">
         <h1 class="text-center">Profil du Joueur</h1>
         <div class="mt-4">
