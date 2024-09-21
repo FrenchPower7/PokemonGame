@@ -28,7 +28,7 @@
 </head>
 <body>
 
-    <?php include 'header.php'; ?>
+    <?php include 'header.html'; ?>
 
     <div class="container mt-5">
         <h1 class="text-center">Choisissez votre Pokémon</h1>
