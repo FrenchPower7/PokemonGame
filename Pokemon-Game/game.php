@@ -65,7 +65,7 @@ function updateProfilStats($result, $pokemonJoueurName) {
 </head>
 <body>
 
-    <?php include 'header.php'; ?>
+    <?php include 'header.html'; ?>
 
     <div class="container mt-5">
         <h1 class="text-center">Votre Pokémon</h1>
