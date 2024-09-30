@@ -6,4 +6,5 @@
 
 C'est un jeu où on choisit son pokemon et on as 3 manche pour choisir la stats qu'on veut mettre en avant pour son pokemon
 
-
+à faire : 
+Une version pour integrer une BDD correctement
