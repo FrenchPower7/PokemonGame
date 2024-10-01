@@ -1,0 +1,22 @@
+/*              *\
+----- French -----
+Date de déconnexion : 2024-10-01 08:54:34
+IP : 127.0.0.1
+Statut : Déconnexion
+----- [] -----
+
+/*              *\
+----- French -----
+Date de connexion : 2024-10-01 08:54:42
+IP : 127.0.0.1
+Statut : Connexion réussie
+----- [] -----
+
+/*              *\
+----- Pseudo : French -----
+Date de jeu : 2024-10-01 16:23:45
+Pokemon ID : 384
+IP : 127.0.0.1
+Victoires : 3 / 3
+----- [Game] -----
+
