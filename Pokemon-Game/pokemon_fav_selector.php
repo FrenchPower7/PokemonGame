@@ -1,3 +1,31 @@
+<?php
+session_start();
+
+// Vérifier si l'utilisateur est connecté
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
+
+$userId = $_SESSION['user_id'];
+include 'Admin/BDD.php'; // Connexion à la base de données
+
+// Si un Pokémon est sélectionné
+if (isset($_GET['pokemonId'])) {
+    $pokemonId = (int)$_GET['pokemonId'];
+    
+    // Mettre à jour le Pokémon favori dans la base de données
+    $updateFavStmt = $bdd->prepare("UPDATE users SET fav = :fav WHERE id = :user_id");
+    $updateFavStmt->bindParam(':fav', $pokemonId, PDO::PARAM_INT);
+    $updateFavStmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $updateFavStmt->execute();
+
+    // Rediriger vers le profil après la mise à jour
+    header("Location: profil.php");
+    exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -31,7 +59,7 @@
     <?php include 'ADMIN/header.php'; ?>
 
     <div class="container mt-5">
-        <h1 class="text-center">Choisissez votre Pokémon</h1>
+        <h1 class="text-center">Choisissez votre Pokémon favori</h1>
 
         <!-- Barre de recherche -->
         <div class="text-center mb-4">
@@ -81,8 +109,8 @@
         }
 
         function choisirPokemon(id) {
-            // Rediriger vers game.php avec l'ID du Pokémon choisi
-            window.location.href = `game.php?pokemonId=${id}`;
+            // Rediriger vers cette même page pour mettre à jour le Pokémon favori dans la base de données
+            window.location.href = `pokemon_fav_selector.php?pokemonId=${id}`;
         }
 
         // Fonction pour filtrer les Pokémon en fonction de la recherche
