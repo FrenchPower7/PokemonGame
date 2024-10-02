@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Statistiques du Pokémon</title>
     <link href="http://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .container {
             display: flex;
             flex-direction: column;
         }
-        .comparison-table, .top-users-table {
+        .comparison-table, .top-users-table, .top-pokemons-table {
             flex: 1;
-            margin-top: 20px; /* Ajout d'un espace entre les sections */
-        }
-        .top-users-table {
             margin-top: 20px; /* Ajout d'un espace entre les sections */
         }
         .chart-container {
@@ -77,50 +74,94 @@ if (empty($allPokemonsData)) {
 }
 
 // Comparaison des stats avec tous les Pokémon
-$attaqueInferieure = 0;
-$defenseInferieure = 0;
-$pvInferieure = 0;
+$attaqueSuperieure = 0;
+$defenseSuperieure = 0;
+$pvSuperieur = 0;
 $totalPokemons = 0;
 
 foreach ($allPokemonsData as $pokemon) {
     if (isset($pokemon['stats'])) {
         $totalPokemons++;
         
-        // Comparaison des statistiques pour les ratios
-        if ($pokemon['stats']['atk'] < $attaque) {
-            $attaqueInferieure++;
+        // Comparaison des statistiques pour les supériorités
+        if ($pokemon['stats']['atk'] > $attaque) {
+            $attaqueSuperieure++;
         }
-        if ($pokemon['stats']['def'] < $defense) {
-            $defenseInferieure++;
+        if ($pokemon['stats']['def'] > $defense) {
+            $defenseSuperieure++;
         }
-        if ($pokemon['stats']['hp'] < $pv) {
-            $pvInferieure++;
+        if ($pokemon['stats']['hp'] > $pv) {
+            $pvSuperieur++;
         }
     }
 }
 
-// Récupérer les 5 meilleurs utilisateurs par win_num
-$stmt = $bdd->query("SELECT pseudo, win_num FROM users ORDER BY win_num DESC LIMIT 5");
-$topWinners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Récupérer le top 5 des utilisateurs par victoires
+$topWinnersStmt = $bdd->query("SELECT pseudo, win_num FROM users ORDER BY win_num DESC LIMIT 5");
+$topWinners = $topWinnersStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calculer les ratios
-$ratioAttaque = ($totalPokemons > 0) ? ($attaqueInferieure / $totalPokemons) * 100 : 0;
-$ratioDefense = ($totalPokemons > 0) ? ($defenseInferieure / $totalPokemons) * 100 : 0;
-$ratioPv = ($totalPokemons > 0) ? ($pvInferieure / $totalPokemons) * 100 : 0;
 
+
+// Récupérer le top 10 des Pokémon par attaque, défense et PV
+usort($allPokemonsData, function ($a, $b) {
+    // Vérifiez si les deux Pokémon ont des statistiques d'attaque
+    $atkA = $a['stats']['atk'] ?? 0; // Utiliser 0 si 'atk' est inexistant
+    $atkB = $b['stats']['atk'] ?? 0; // Utiliser 0 si 'atk' est inexistant
+    return $atkB <=> $atkA; // Trier par attaque
+});
+$topAttackPokemons = array_slice($allPokemonsData, 0, 10);
+
+usort($allPokemonsData, function ($a, $b) {
+    // Vérifiez si les deux Pokémon ont des statistiques de défense
+    $defA = $a['stats']['def'] ?? 0; // Utiliser 0 si 'def' est inexistant
+    $defB = $b['stats']['def'] ?? 0; // Utiliser 0 si 'def' est inexistant
+    return $defB <=> $defA; // Trier par défense
+});
+$topDefensePokemons = array_slice($allPokemonsData, 0, 10);
+
+usort($allPokemonsData, function ($a, $b) {
+    // Vérifiez si les deux Pokémon ont des statistiques de PV
+    $hpA = $a['stats']['hp'] ?? 0; // Utiliser 0 si 'hp' est inexistant
+    $hpB = $b['stats']['hp'] ?? 0; // Utiliser 0 si 'hp' est inexistant
+    return $hpB <=> $hpA; // Trier par PV
+});
+$topHpPokemons = array_slice($allPokemonsData, 0, 10);
+
+// Récupérer le top 5 des Pokémon favoris
+$topFavoritesStmt = $bdd->query("SELECT fav, COUNT(*) AS count FROM users GROUP BY fav ORDER BY count DESC LIMIT 5");
+$topFavorites = $topFavoritesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupérer les noms des Pokémon favoris
+$topFavoriteNames = [];
+foreach ($topFavorites as $favorite) {
+    $favoriteId = $favorite['fav'];
+    $favoriteResponse = file_get_contents($pokemon_api_url . '/' . $favoriteId);
+    if ($favoriteResponse !== FALSE) {
+        $favoriteData = json_decode($favoriteResponse, true);
+        $topFavoriteNames[] = [
+            'name' => htmlspecialchars($favoriteData['name']['fr']),
+            'count' => $favorite['count']
+        ];
+    }
+}
 ?>
 
 <div class="container mt-5">
     <!-- Section pour la sélection du Pokémon -->
-    <div class="mb-4">
+    <div class="mb-4 text-center"> <!-- Centrage du texte -->
         <h2>Statistiques de votre Pokémon choisi:</h2>
         <p>Nom: <?php echo htmlspecialchars($pokemonData['name']['fr']); ?></p>
         <p>Attaque: <?php echo $attaque; ?></p>
         <p>Défense: <?php echo $defense; ?></p>
         <p>PV: <?php echo $pv; ?></p>
-        <p>Ratio d'attaque (pourcentage de Pokémon avec une attaque inférieure): <?php echo number_format($ratioAttaque, 2); ?>%</p>
-        <p>Ratio de défense (pourcentage de Pokémon avec une défense inférieure): <?php echo number_format($ratioDefense, 2); ?>%</p>
-        <p>Ratio de PV (pourcentage de Pokémon avec des PV inférieurs): <?php echo number_format($ratioPv, 2); ?>%</p>
+        <p>Nombre de Pokémon avec une attaque supérieure: <?php echo $attaqueSuperieure; ?></p>
+        <p>Nombre de Pokémon avec une défense supérieure: <?php echo $defenseSuperieure; ?></p>
+        <p>Nombre de Pokémon avec des PV supérieurs: <?php echo $pvSuperieur; ?></p>
+        
+        <!-- Formulaire pour choisir un Pokémon à comparer -->
+        <form action="stats/selection_stats.php" method="get" class="mt-4">
+            <button type="submit" class="btn btn-primary">Choisir un autre Pokémon</button>
+        </form>
     </div>
 
     <div class="row">
@@ -165,22 +206,64 @@ $ratioPv = ($totalPokemons > 0) ? ($pvInferieure / $totalPokemons) * 100 : 0;
             </table>
         </div>
     </div>
+
+    <!-- Section pour le top 10 des Pokémon -->
+    <div class="row top-pokemons-table">
+        <div class="col-md-4">
+            <h3>Top 10 Pokémon par Attaque:</h3>
+            <ul class="list-group">
+                <?php foreach ($topAttackPokemons as $pokemon): ?>
+                <li class="list-group-item"><?php echo htmlspecialchars($pokemon['name']['fr']) . " - " . $pokemon['stats']['atk']; ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h3>Top 10 Pokémon par Défense:</h3>
+            <ul class="list-group">
+                <?php foreach ($topDefensePokemons as $pokemon): ?>
+                <li class="list-group-item"><?php echo htmlspecialchars($pokemon['name']['fr']) . " - " . $pokemon['stats']['def']; ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h3>Top 10 Pokémon par PV:</h3>
+            <ul class="list-group">
+                <?php foreach ($topHpPokemons as $pokemon): ?>
+                <li class="list-group-item"><?php echo htmlspecialchars($pokemon['name']['fr']) . " - " . $pokemon['stats']['hp']; ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Section pour le top 5 des Pokémon favoris -->
+    <div class="row top-favorites-table mt-4">
+        <div class="col-md-12">
+            <h3>Top 5 Pokémon Favoris:</h3>
+            <ul class="list-group">
+                <?php foreach ($topFavoriteNames as $favorite): ?>
+                <li class="list-group-item"><?php echo htmlspecialchars($favorite['name']) . " - " . $favorite['count']; ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>
 // Données pour les graphiques
-const attackRatio = <?php echo $ratioAttaque; ?>;
-const defenseRatio = <?php echo $ratioDefense; ?>;
-const hpRatio = <?php echo $ratioPv; ?>;
+const totalPokemons = <?php echo $totalPokemons; ?>;
+const attackSuperiorCount = <?php echo $attaqueSuperieure; ?>;
+const defenseSuperiorCount = <?php echo $defenseSuperieure; ?>;
+const hpSuperiorCount = <?php echo $pvSuperieur; ?>;
 
 // Fonction pour créer le graphique
-function createDonutChart(ctx, label, data) {
+function createDonutChart(ctx, label, superiorCount) {
+    const inferiorCount = totalPokemons - superiorCount;
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Inférieur', 'Supérieur ou Égal'],
             datasets: [{
-                data: [data, 100 - data],
+                data: [inferiorCount, superiorCount],
                 backgroundColor: ['#ff6384', '#36a2eb'],
                 hoverBackgroundColor: ['#ff6384', '#36a2eb']
             }]
@@ -205,10 +288,9 @@ const attackRatioCtx = document.getElementById('attackRatioChart').getContext('2
 const defenseRatioCtx = document.getElementById('defenseRatioChart').getContext('2d');
 const hpRatioCtx = document.getElementById('hpRatioChart').getContext('2d');
 
-createDonutChart(attackRatioCtx, 'Ratio d\'Attaque', attackRatio);
-createDonutChart(defenseRatioCtx, 'Ratio de Défense', defenseRatio);
-createDonutChart(hpRatioCtx, 'Ratio de PV', hpRatio);
-
+createDonutChart(attackRatioCtx, 'Ratio d\'Attaque', attackSuperiorCount);
+createDonutChart(defenseRatioCtx, 'Ratio de Défense', defenseSuperiorCount);
+createDonutChart(hpRatioCtx, 'Ratio de PV', hpSuperiorCount);
 </script>
 
 <?php include 'Admin/footer.php'; ?>
